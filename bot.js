@@ -51,23 +51,22 @@ client.on('message', message => {
         if (cmd === 'ping') {
             // Send "pong" to the same channel
             channel.send('pong');
+            console.log("I got pinged at by " + member.displayName)
         }else if(cmd === 'whoAmI') {
             var username = member.user.username;
-            console.log(member);
 
             if(username === "Vubito32"){
                 channel.send("You are Vubito32! My master ... How might I help you? <3");
             }else{
                 channel.send("You are " + username + "! U fucker!");
             }
-
+            console.log("I told " + member.displayName + " who they are")
         }else if(cmd === "randomise" || cmd === "randomize"){
 
             if(args[0] == "session"){
                 let errorMsg = ""
                 let wrongSyntaxFlag = false
-                console.log(Number(args[1]))
-                if (args[1] == undefined || typeof args[1] != 'number'){
+                if (args[1] == undefined || typeof Number(args[1]) != 'number'){
                     errorMsg += "The syntax for this command is '#" + cmd + " session <number of people in one channel'\n"
                     wrongSyntaxFlag = true
                 }
@@ -89,25 +88,27 @@ client.on('message', message => {
             }else if (args[0] == "next"){
                 //CODE HERE
                 randomiseOffset = Number(randomiseOffset) + 1
-                console.log(randomiseOffset)
                 randomiseSession(member, args, message, randomiseOffset)
             }else{
                 message.channel.send("This command does not exist. Please user '#randomise session <>'")
             }
 
         }else if(cmd === "pullAll"){
+            console.log(member.displayName + " pulled everyone to their channel")
             pullAll(args, message.member)
-            //message.channel.send("This command is currently disabled")
+
         }else if(cmd === "session"){
             if(args[0] == "create"){
 
                 sessionMembers = getAllMembersFromMyChannel(member.voice.channel, message);
                 message.channel.send("Created a session with " + sessionMembers.length + " members")
+                console.log(member.displayName + " created a sesson with " + sessionMembers.length + " member(s)")
 
             }else if(args[0] == "delete"){
 
                 sessionMembers = []
                 message.channel.send("Deleted the session")
+                console.log(member.displayName + " deleted the session")
 
             }else if(args[0] == "add"){
 
@@ -115,6 +116,7 @@ client.on('message', message => {
                 //filtering me out of that session and adding them to the session members
                 addToSession(membersFromMyChannel, member)
                 message.channel.send("The size of the session is now " + sessionMembers.length)
+                console.log(member.displayName + " added person(s) to the session. The size is now " + sessionMembers.length)
 
             }else if (args[0] == "remove"){
                 
@@ -138,6 +140,8 @@ client.on('message', message => {
                 removeFromSession(arg)
 
                 message.channel.send("The size of the session is now " + sessionMembers.length)
+                console.log(member.displayName + " removed a person from the session. The size is now + " + sessionMembers.length)
+
             }else if(args[0] == "list"){
 
                 if(sessionMembers.length <= 0){
@@ -154,6 +158,9 @@ client.on('message', message => {
                 }
 
                 message.channel.send(listOfMembers)
+                console.log(member.displayName + " requested a member list. The session contains " + sessionMembers.length + " members")
+                console.log(listOfMembers)
+
             }else if(args[0] == "assignRole"){
                 var errorMsg = ""
                 var wrongSyntaxFlag = false;
@@ -171,6 +178,8 @@ client.on('message', message => {
 
                 assignEventRole(member)
                 message.channel.send("Assigned the role 'Event' to everyone in the session");
+                console.log(member.displayName + " assigned the role 'Event' to everyone in the session")
+
             }
         }
     }
@@ -192,7 +201,6 @@ function randomise(member, args, message){
     //Creating three arrays with people inside
     for(var i = 0; i < amountOfPeopleInOneChannel; i++){
         var arr = []
-        console.log("new group")
         for(var j = i; j < membersArray.length; j = parseInt(j) + parseInt(amountOfPeopleInOneChannel)){
             arr.push(membersArray[j]);
         }
@@ -211,7 +219,6 @@ function randomise(member, args, message){
     })
 
     //Moving the people in the correct channels
-    console.log(voiceChannels)
     for(var i = 0; i < randomiseMap[0].length; i++){
         for(var j = 0; j < randomiseMap.length; j++){
             var memb = randomiseMap[j][i]
@@ -242,7 +249,6 @@ function randomiseSession(member, args, message, offset = 0){
     //Creating three arrays with people inside
     for(var i = 0; i < amountOfPeopleInOneChannel; i++){
         var arr = []
-        console.log("new group")
         for(var j = i; j < membersArray.length; j = parseInt(j) + parseInt(amountOfPeopleInOneChannel)){
             arr.push(membersArray[j]);
         }
@@ -282,6 +288,7 @@ function randomiseSession(member, args, message, offset = 0){
     }
 
     message.channel.send(logMsg)
+    console.log(logMsg)
 }
 
 //IN CREATION
@@ -349,7 +356,6 @@ function assignEventRole(member){
 
     allGuildRoles.forEach(function(item, index){
         if(item.name == "Event"){
-            console.log("found event role")
             eventRole = item;
             return;
         } 
