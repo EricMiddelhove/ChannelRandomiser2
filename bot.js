@@ -83,7 +83,7 @@ client.on('message', message => {
                 randomiseSession(member, args, message);
 
             }else if (args[0] == "next"){
-
+                //CODE HERE
 
 
             }
