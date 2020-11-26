@@ -16,9 +16,12 @@ const TOKEN = require('./token.js')
 //Public variables
 var sessionMembers = []
 
+//RANDOMISING VARIABLES
 //This array will contain as many arrays as people should be in one channel. 
 //Imagine the Arrays next to each other. The people will get matched after lines, every line is one group
 var randomiseMap = [];
+let randomiseOffset = 0;
+var amountOfPeopleInOneChannel = 0;
 
 /**
  * The ready event is vital, it means that only _after_ this will your bot start reacting to information
@@ -84,8 +87,9 @@ client.on('message', message => {
 
             }else if (args[0] == "next"){
                 //CODE HERE
-
-
+                randomiseOffset = Number(randomiseOffset) + 1
+                console.log(randomiseOffset)
+                randomiseSession(member, args, message, randomiseOffset)
             }
 
         }else if(cmd === "pullAll"){
@@ -147,6 +151,7 @@ client.on('message', message => {
     }
 });
 
+//DEPRECATED
 function randomise(member, args, message){
     
     var membersArray = getAllMembersFromMyChannel(member.voice.channel)
@@ -194,16 +199,15 @@ function randomise(member, args, message){
     }
 }
 
-function randomiseSession(member, args, message){
+function randomiseSession(member, args, message, offset = 0){
     var membersArray = sessionMembers
-
 
     //This array will contain as many arrays as people should be in one channel. 
     //Imagine the Arrays next to each other. The people will get matched after lines, every line is one group
-    var randomiseMap = [];
+    //var randomiseMap = [];
 
     //Creating actual working array, inside the parent array in order iterate easier through them
-    var amountOfPeopleInOneChannel = args[1]
+    amountOfPeopleInOneChannel = args[1]
 
     //Calculating how many people should be in one channel
     var amountOfPeopleInOneArray = Math.floor((membersArray.length) / amountOfPeopleInOneChannel);
@@ -233,17 +237,24 @@ function randomiseSession(member, args, message){
     })
 
     //Moving the people in the correct channels
-    console.log(voiceChannels)
+    //console.log(voiceChannels)
+    let logMsg = ""
+    console.log(offset)
     for(var i = 0; i < randomiseMap[0].length; i++){
         for(var j = 0; j < randomiseMap.length; j++){
-            var memb = randomiseMap[j][i]
+            let ii =  (i + (offset*j)) % randomiseMap[0].length;
+            var memb = randomiseMap[j][ii]
             if(memb != undefined && memb.voice.channel != undefined){
-                memb.voice.setChannel(voiceChannels[i])
+                //memb.voice.setChannel(voiceChannels[i + (Math.pow(offset,j) % randomiseMap.length)])
                 //console.log("moved " + memb.displayName + " to: " + voiceChannels[i].name)
-                message.channel.send("moved " + memb.displayName + " to: " + voiceChannels[i].name)
+                logMsg += "moved " + memb.displayName + " to: " + voiceChannels[i].name + "\n"
+            }else{
+                logMsg += "did not found " + memb.displayName + "\n"
             }
         }
     }
+
+    message.channel.send(logMsg)
 }
 
 //IN CREATION
