@@ -66,7 +66,8 @@ client.on('message', message => {
             if(args[0] == "session"){
                 let errorMsg = ""
                 let wrongSyntaxFlag = false
-                if (args[1] == undefined){
+                console.log(Number(args[1]))
+                if (args[1] == undefined || typeof args[1] != 'number'){
                     errorMsg += "The syntax for this command is '#" + cmd + " session <number of people in one channel'\n"
                     wrongSyntaxFlag = true
                 }
@@ -90,6 +91,8 @@ client.on('message', message => {
                 randomiseOffset = Number(randomiseOffset) + 1
                 console.log(randomiseOffset)
                 randomiseSession(member, args, message, randomiseOffset)
+            }else{
+                message.channel.send("This command does not exist. Please user '#randomise session <>'")
             }
 
         }else if(cmd === "pullAll"){
@@ -123,7 +126,7 @@ client.on('message', message => {
                     errorMsg += "You have to create a session first \n"
                     wrongConfiguration = true;                }
                 if (arg == undefined) {
-                    errorMsg += "The syntax for this command is '#session remove <displayName of person to remove>'\n"
+                    errorMsg += "The syntax for this command is '#session remove <displayName of person to remove>' \n"
                     wrongConfiguration = true;
                 }
 
@@ -137,6 +140,11 @@ client.on('message', message => {
                 message.channel.send("The size of the session is now " + sessionMembers.length)
             }else if(args[0] == "list"){
 
+                if(sessionMembers.length <= 0){
+                    message.channel.send("Your session is empty")
+                    return
+                }
+
                 let listOfMembers = "The session contains following people: \n"
 
                 for(var i = 0; i < sessionMembers.length; i++){
@@ -146,6 +154,23 @@ client.on('message', message => {
                 }
 
                 message.channel.send(listOfMembers)
+            }else if(args[0] == "assignRole"){
+                var errorMsg = ""
+                var wrongSyntaxFlag = false;
+
+                if(sessionMembers.length <= 0){
+                    wrongSyntaxFlag = true
+                    errorMsg += "You need to create a session first"
+                }
+                
+                if(wrongSyntaxFlag){
+                    message.channel.send(errorMsg);
+                    return;
+                }
+
+
+                assignEventRole(member)
+                message.channel.send("Assigned the role 'Event' to everyone in the session");
             }
         }
     }
@@ -318,5 +343,21 @@ function getAllMembersFromMyChannel(vChannel, message){
     return membersArray
 }
 
+function assignEventRole(member){
+    var allGuildRoles = member.guild.roles.cache
+    var eventRole = ""
+
+    allGuildRoles.forEach(function(item, index){
+        if(item.name == "Event"){
+            console.log("found event role")
+            eventRole = item;
+            return;
+        } 
+    })
+
+    for(var i = 0; i < sessionMembers.length; i++){
+        sessionMembers[i].roles.add(eventRole,["Welcome to the current Mixer event!"]);
+    }
+}
 // Log our bot in using the token from https://discord.com/developers/applications
 client.login(TOKEN.token);
