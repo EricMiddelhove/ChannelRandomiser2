@@ -238,18 +238,20 @@ function randomiseSession(member, args, message, offset = 0){
 
     //Moving the people in the correct channels
     //console.log(voiceChannels)
+    //THIS WORKS DO NOT TOUCH THIS
     let logMsg = ""
-    console.log(offset)
     for(var i = 0; i < randomiseMap[0].length; i++){
         for(var j = 0; j < randomiseMap.length; j++){
             let ii =  (i + (offset*j)) % randomiseMap[0].length;
             var memb = randomiseMap[j][ii]
             if(memb != undefined && memb.voice.channel != undefined){
-                //memb.voice.setChannel(voiceChannels[i + (Math.pow(offset,j) % randomiseMap.length)])
+                memb.voice.setChannel(voiceChannels[i])
                 //console.log("moved " + memb.displayName + " to: " + voiceChannels[i].name)
                 logMsg += "moved " + memb.displayName + " to: " + voiceChannels[i].name + "\n"
-            }else{
+            }else if(memb != undefined){
                 logMsg += "did not found " + memb.displayName + "\n"
+            }else{
+                logMsg += "unknown member\n"
             }
         }
     }
