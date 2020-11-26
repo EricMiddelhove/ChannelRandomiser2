@@ -1,5 +1,6 @@
 'use strict';
 
+
 const { Console } = require('console');
 /**
  * A ping pong bot, whenever you send "ping", it replies "pong".
@@ -10,6 +11,14 @@ const Discord = require('discord.js');
 
 // Create an instance of a Discord client
 const client = new Discord.Client();
+const TOKEN = require('./token.js')
+
+//Public variables
+var sessionMembers = []
+
+//This array will contain as many arrays as people should be in one channel. 
+//Imagine the Arrays next to each other. The people will get matched after lines, every line is one group
+var randomiseMap = [];
 
 /**
  * The ready event is vital, it means that only _after_ this will your bot start reacting to information
@@ -49,31 +58,98 @@ client.on('message', message => {
                 channel.send("You are " + username + "! U fucker!");
             }
 
-        }else if(cmd === "randomise"){
-            randomise(member, args);
-        }else if(cmd === "randomize"){
-            randomise(member, args);
+        }else if(cmd === "randomise" || cmd === "randomize"){
+
+            if(args[0] == "session"){
+                let errorMsg = ""
+                let wrongSyntaxFlag = false
+                if (args[1] == undefined){
+                    errorMsg += "The syntax for this command is '#" + cmd + " session <number of people in one channel'\n"
+                    wrongSyntaxFlag = true
+                }
+                if(sessionMembers.length == 0){
+                    errorMsg += "You need to create a session first\n"
+                    wrongSyntaxFlag = true
+                }else if(args[1] > sessionMembers.length){
+                    errorMsg += "The number is too big. There are not enough people in your session\n"
+                    wrongSyntaxFlag = true
+                }
+
+                if (wrongSyntaxFlag){
+                    message.channel.send(errorMsg)
+                    return;
+                }
+
+                randomiseSession(member, args, message);
+
+            }else if (args[0] == "next"){
+
+
+
+            }
+
+        }else if(cmd === "pullAll"){
+            pullAll(args, message.member)
+            //message.channel.send("This command is currently disabled")
+        }else if(cmd === "session"){
+            if(args[0] == "create"){
+
+                sessionMembers = getAllMembersFromMyChannel(member.voice.channel, message);
+                message.channel.send("Created a session with " + sessionMembers.length + " members")
+
+            }else if(args[0] == "delete"){
+
+                sessionMembers = []
+                message.channel.send("Deleted the session")
+
+            }else if(args[0] == "add"){
+
+                let membersFromMyChannel = getAllMembersFromMyChannel(member.voice.channel, message)
+                //filtering me out of that session and adding them to the session members
+                addToSession(membersFromMyChannel, member)
+                message.channel.send("The size of the session is now " + sessionMembers.length)
+
+            }else if (args[0] == "remove"){
+                
+                let arg = args[1]
+
+                let wrongConfiguration = false;
+                let errorMsg = ""
+                if (sessionMembers.length == 0){
+                    errorMsg += "You have to create a session first \n"
+                    wrongConfiguration = true;                }
+                if (arg == undefined) {
+                    errorMsg += "The syntax for this command is '#session remove <displayName of person to remove>'\n"
+                    wrongConfiguration = true;
+                }
+
+                if (wrongConfiguration){
+                    message.channel.send(errorMsg)
+                    return;
+                } 
+
+                removeFromSession(arg)
+
+                message.channel.send("The size of the session is now " + sessionMembers.length)
+            }else if(args[0] == "list"){
+
+                let listOfMembers = "The session contains following people: \n"
+
+                for(var i = 0; i < sessionMembers.length; i++){
+
+                    listOfMembers += (" - " + sessionMembers[i].displayName + "\n");
+
+                }
+
+                message.channel.send(listOfMembers)
+            }
         }
     }
 });
 
-function randomise(member, args){
-    var channel = member.voice.channel
-    //Converting Members ID,Object Map to Object Array
-    var members = channel.members;
-
-    //console.log(members)
-    var membersArray = [];
-    members.forEach(function(item, index){
-
-        membersArray.push(item)
-
-    })
-
-
-    //This array will contain as many arrays as people should be in one channel. 
-    //Imagine the Arrays next to each other. The people will get matched after lines, every line is one group
-    var parentArray = [];
+function randomise(member, args, message){
+    
+    var membersArray = getAllMembersFromMyChannel(member.voice.channel)
 
     //Creating actual working array, inside the parent array in order iterate easier through them
     var amountOfPeopleInOneChannel = args[0]
@@ -85,13 +161,12 @@ function randomise(member, args){
 
     //Creating three arrays with people inside
     for(var i = 0; i < amountOfPeopleInOneChannel; i++){
-
         var arr = []
         console.log("new group")
         for(var j = i; j < membersArray.length; j = parseInt(j) + parseInt(amountOfPeopleInOneChannel)){
             arr.push(membersArray[j]);
         }
-        parentArray.push(arr)
+        randomiseMap.push(arr)
     }
 
     //Getting available channels
@@ -100,27 +175,135 @@ function randomise(member, args){
 
     //Sorting out voice channels
     channels.forEach(function(item, index){
-
-       if(item.type == 'voice' && item.id != item.guild.afkChannelID){
+       if(item.type == 'voice' && item.id != item.guild.afkChannelID && item.name != "Cinema"){
            voiceChannels.push(item)
        }
-
     })
 
+    //Moving the people in the correct channels
     console.log(voiceChannels)
-    for(var i = 0; i < parentArray[0].length; i++){
-        for(var j = 0; j < parentArray.length; j++){
-            var memb = parentArray[j][i]
-            console.log("--------------------\n" + memb)
+    for(var i = 0; i < randomiseMap[0].length; i++){
+        for(var j = 0; j < randomiseMap.length; j++){
+            var memb = randomiseMap[j][i]
             if(memb != undefined){
                 memb.voice.setChannel(voiceChannels[i])
-                console.log("moved " + memb.username + " to: " + voiceChannels[i].name)
+                console.log("moved " + memb.displayName + " to: " + voiceChannels[i].name)
+                message.channel.send("moved " + memb.displayName + " to: " + voiceChannels[i].name)
             }
         }
     }
+}
 
+function randomiseSession(member, args, message){
+    var membersArray = sessionMembers
+
+
+    //This array will contain as many arrays as people should be in one channel. 
+    //Imagine the Arrays next to each other. The people will get matched after lines, every line is one group
+    var randomiseMap = [];
+
+    //Creating actual working array, inside the parent array in order iterate easier through them
+    var amountOfPeopleInOneChannel = args[1]
+
+    //Calculating how many people should be in one channel
+    var amountOfPeopleInOneArray = Math.floor((membersArray.length) / amountOfPeopleInOneChannel);
+
+    //Splitting up into amountOfPeopleInOneChannel arrays
+
+    //Creating three arrays with people inside
+    for(var i = 0; i < amountOfPeopleInOneChannel; i++){
+        var arr = []
+        console.log("new group")
+        for(var j = i; j < membersArray.length; j = parseInt(j) + parseInt(amountOfPeopleInOneChannel)){
+            arr.push(membersArray[j]);
+        }
+        randomiseMap.push(arr)
+    }
+
+
+    //Getting available channels
+    var channels = member.voice.guild.channels.cache
+    var voiceChannels = [];
+
+    //Sorting out voice channels
+    channels.forEach(function(item, index){
+       if(item.type == 'voice' && item.id != item.guild.afkChannelID && item.name != "Cinema"){
+           voiceChannels.push(item)
+       }
+    })
+
+    //Moving the people in the correct channels
+    console.log(voiceChannels)
+    for(var i = 0; i < randomiseMap[0].length; i++){
+        for(var j = 0; j < randomiseMap.length; j++){
+            var memb = randomiseMap[j][i]
+            if(memb != undefined && memb.voice.channel != undefined){
+                memb.voice.setChannel(voiceChannels[i])
+                //console.log("moved " + memb.displayName + " to: " + voiceChannels[i].name)
+                message.channel.send("moved " + memb.displayName + " to: " + voiceChannels[i].name)
+            }
+        }
+    }
+}
+
+//IN CREATION
+function pullAll(args,member){
+    var myChannel = member.voice.channel
+
+    for(var i = 0; i < sessionMembers.length; i++){
+        sessionMembers[i].voice.setChannel(myChannel);
+    }
+}
+
+function removeFromSession(arg){
+    let displayNameToDelete = ""
+    for(var i = 0; i < arg.length; i++){
+        if(arg[i] == "_"){
+            displayNameToDelete += " "
+        }else{
+            displayNameToDelete += arg[i]
+        }
+    }
+
+    let newSessionMembers = []
+    for(var i = 0; i < sessionMembers.length; i++){
+        if (sessionMembers[i].displayName != displayNameToDelete) {
+            newSessionMembers.push(sessionMembers[i])
+        }
+    }
+    sessionMembers = newSessionMembers;
 
 }
 
+function addToSession(membersToAdd, me){
+    for(var i = 0; i < membersToAdd.length; i++){
+        if(me.user.id != membersToAdd[i].user.id){
+            sessionMembers.push(membersToAdd[i])
+        }
+    }
+}
+
+function getAllMembersFromMyChannel(vChannel, message){
+
+    if(vChannel == undefined){
+        message.channel.send("You need to be in a voice channel to do that")
+        return
+    }
+    //Converting Members ID,Object Map to Object Array
+
+    //------- Assigning all Members in this channel ----
+    var members = vChannel.members;
+
+    //console.log(members)
+    var membersArray = [];
+    members.forEach(function(item, index){
+
+        membersArray.push(item)
+
+    })
+
+    return membersArray
+}
+
 // Log our bot in using the token from https://discord.com/developers/applications
-client.login('Nzc4ODA0MjQ5ODIzNDEyMjY1.X7XT-g.uqmb-NcgR7CBC4yTPOA3nkbVimk');
+client.login(TOKEN.token);
