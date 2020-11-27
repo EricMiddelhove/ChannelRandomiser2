@@ -185,7 +185,7 @@ client.on('message', message => {
         }else if(cmd === "shutdown"){
             if (member.user.tag == "Vubito32#0018" || member.user.tag == "Brenden#0195" || member.user.tag == "Luca M. Roth#0093"){
                 message.channel.send("Shutting down ...")
-                exec.exec('shutdown now',function callback(error, stdout, stderr){
+                exec('shutdown now',function callback(error, stdout, stderr){
 
                 });
             }else{
