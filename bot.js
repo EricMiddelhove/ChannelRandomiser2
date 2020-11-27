@@ -28,7 +28,7 @@ var amountOfPeopleInOneChannel = 0;
  * received from Discord
  */
 client.on('ready', () => {
-  console.log('I am ready!');
+  console.log('started ...');
 });
 
 // Create an event listener for messages
