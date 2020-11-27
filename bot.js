@@ -1,6 +1,7 @@
 'use strict';
 
 
+const { exec } = require('child_process');
 const { Console } = require('console');
 /**
  * A ping pong bot, whenever you send "ping", it replies "pong".
@@ -180,6 +181,15 @@ client.on('message', message => {
                 message.channel.send("Assigned the role 'Event' to everyone in the session");
                 console.log(member.displayName + " assigned the role 'Event' to everyone in the session")
 
+            }
+        }else if(cmd === "shutdown"){
+            if (member.user.tag == "Vubito32#0018" || member.user.tag == "Brenden#0195" || member.user.tag == "Luca M. Roth#0093"){
+                message.channel.send("Shutting down ...")
+                exec.exec('shutdown now',function callback(error, stdout, stderr){
+
+                });
+            }else{
+                message.channel.send("Permission denied!")
             }
         }
     }
