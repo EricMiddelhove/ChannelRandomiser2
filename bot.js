@@ -251,12 +251,12 @@ function randomiseSession(member, args, message, offset = 0){
     //Creating actual working array, inside the parent array in order iterate easier through them
     amountOfPeopleInOneChannel = args[1]
 
-    //Calculating how many people should be in one channel
+    //Calculating how many people should be in one table
     var amountOfPeopleInOneArray = Math.floor((membersArray.length) / amountOfPeopleInOneChannel);
 
     //Splitting up into amountOfPeopleInOneChannel arrays
 
-    //Creating three arrays with people inside
+    //Creating the arrays with people inside
     for(var i = 0; i < amountOfPeopleInOneChannel; i++){
         var arr = []
         for(var j = i; j < membersArray.length; j = parseInt(j) + parseInt(amountOfPeopleInOneChannel)){
@@ -287,12 +287,9 @@ function randomiseSession(member, args, message, offset = 0){
             var memb = randomiseMap[j][ii]
             if(memb != undefined && memb.voice.channel != undefined){
                 memb.voice.setChannel(voiceChannels[i])
-                //console.log("moved " + memb.displayName + " to: " + voiceChannels[i].name)
                 logMsg += "moved " + memb.displayName + " to: " + voiceChannels[i].name + "\n"
             }else if(memb != undefined){
                 logMsg += "did not found " + memb.displayName + "\n"
-            }else{
-                logMsg += "unknown member\n"
             }
         }
     }
@@ -306,6 +303,7 @@ function pullAll(args,member){
     var myChannel = member.voice.channel
 
     for(var i = 0; i < sessionMembers.length; i++){
+        if(sessionMembers[i].voice.channel == undefined) continue;
         sessionMembers[i].voice.setChannel(myChannel);
     }
 }
